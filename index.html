@@ -20,7 +20,7 @@
   <div class="feed" id="feed"></div><div class="center-message" id="announce"><small id="announceSub"></small><strong id="announceMain"></strong></div>
   <div class="screen-vignette"></div>
   <div class="touch-controls" id="touch"><div class="stick" id="stick"><i id="knob"></i></div><button class="mobile-random" id="randomTouch">↻</button><div class="mobile-look" id="lookZone"></div><div class="touch-actions"><button class="touch-btn" id="dashTouch"><span>➤</span>DASH</button><button class="touch-btn fire" id="fireTouch"><span>✦</span>FIRE</button><button class="touch-btn" id="jumpTouch"><span>↑</span>JUMP</button></div></div>
-  <div class="overlay" id="startOverlay"><div class="menu"><div class="eyebrow">A PROCEDURAL COMBAT EXPERIMENT</div><h1>NO PLAN.<br><span>JUST CHAOS.</span></h1><p class="intro">Welcome to the arena. Your weapon rerolls every 12 seconds — or hit R to tempt fate. Outplay the bots, chain eliminations, and survive the chaos.</p><div class="feature-row"><div class="feature"><b>29</b>WEAPONS</div><div class="feature"><b>04</b>ARENA BOTS</div><div class="feature"><b>∞</b>LOADOUTS</div></div><button class="btn" id="playBtn">ENTER THE ARENA&nbsp; →</button><span class="menu-foot"><span class="key">WASD</span> MOVE &nbsp; <span class="key">MOUSE</span> AIM &nbsp; <span class="key">CLICK</span> FIRE</span></div></div>
+  <div class="overlay" id="startOverlay"><div class="menu"><div class="eyebrow">A PROCEDURAL COMBAT EXPERIMENT</div><h1>NO PLAN.<br><span>JUST CHAOS.</span></h1><p class="intro">Welcome to the arena. Your weapon rerolls every 12 seconds — or hit R to tempt fate. Outplay the bots, chain eliminations, and survive the chaos.</p><div class="feature-row"><div class="feature"><b>49</b>WEAPONS</div><div class="feature"><b>04</b>ARENA BOTS</div><div class="feature"><b>∞</b>LOADOUTS</div></div><button class="btn" id="playBtn">ENTER THE ARENA&nbsp; →</button><span class="menu-foot"><span class="key">WASD</span> MOVE &nbsp; <span class="key">MOUSE</span> AIM &nbsp; <span class="key">CLICK</span> FIRE</span></div></div>
   <div class="overlay result" id="resultOverlay" style="display:none"><div class="menu"><div class="eyebrow">SIMULATION COMPLETE</div><h1 id="resultTitle">ELIMINATED</h1><p id="resultText">You fought well.</p><button class="btn" id="againBtn">RUN IT BACK&nbsp; ↻</button></div></div>
 </div>
 <script type="module">
@@ -88,7 +88,27 @@ const weapons=[
  {name:'Energy Katana',type:'MELEE // QUICK SLASH',icon:'刀',color:0x68f7ff,damage:42,range:4.8,rate:.42,spread:0,shots:1,kind:'melee'},
  {name:'Plasma Axe',type:'MELEE // WIDE SWING',icon:'⛏',color:0xc38aff,damage:57,range:4.2,rate:.72,spread:.08,shots:1,kind:'melee'},
  {name:'Shock Baton',type:'MELEE // RAPID STUN',icon:'ϟ',color:0xffef76,damage:24,range:3.3,rate:.22,spread:0,shots:1,kind:'melee'},
- {name:'Talon Claws',type:'MELEE // TRIPLE STRIKE',icon:'⋔',color:0xff76c8,damage:18,range:3.5,rate:.36,spread:.04,shots:3,kind:'melee'}
+ {name:'Talon Claws',type:'MELEE // TRIPLE STRIKE',icon:'⋔',color:0xff76c8,damage:18,range:3.5,rate:.36,spread:.04,shots:3,kind:'melee'},
+  {name:'Nova Cannon',type:'ENERGY // CHARGED BLAST',icon:'✺',color:0xff8ce8,damage:72,range:54,rate:1.08,spread:.012,shots:1,kind:'slug'},
+  {name:'Comet Repeater',type:'ENERGY // SUSTAINED FIRE',icon:'☄',color:0x84f7ff,damage:13,range:30,rate:.11,spread:.035,shots:1,kind:'laser'},
+  {name:'Solar Flare',type:'ENERGY // FAN BURST',icon:'☼',color:0xffb84d,damage:11,range:24,rate:.52,spread:.07,shots:5,kind:'laser'},
+  {name:'Ghost Rifle',type:'KINETIC // SILENT PRECISION',icon:'◈',color:0xc2d7ff,damage:28,range:48,rate:.52,spread:.006,shots:1,kind:'bullet'},
+  {name:'Longshot',type:'KINETIC // EXTREME RANGE',icon:'⌖',color:0x9ca9ff,damage:58,range:75,rate:.92,spread:.001,shots:1,kind:'slug'},
+  {name:'Auto Shotgun',type:'KINETIC // RAPID SPREAD',icon:'▦',color:0xff9b54,damage:7,range:17,rate:.38,spread:.09,shots:9,kind:'bullet'},
+  {name:'Boomstick',type:'KINETIC // DOUBLE BARREL',icon:'▣',color:0xffd079,damage:15,range:19,rate:.82,spread:.075,shots:6,kind:'bullet'},
+  {name:'Frostbite SMG',type:'CRYO // RAPID FIRE',icon:'❆',color:0x72dfff,damage:9,range:25,rate:.09,spread:.05,shots:1,kind:'laser'},
+  {name:'Tempest Bow',type:'KINETIC // WIND-PIERCING',icon:'➶',color:0x8dffce,damage:39,range:50,rate:.6,spread:.008,shots:1,kind:'slug'},
+  {name:'Sonic Blaster',type:'SONIC // WIDE PULSE',icon:'≋',color:0xe697ff,damage:12,range:28,rate:.3,spread:.055,shots:3,kind:'laser'},
+  {name:'Siege Mortar',type:'EXPLOSIVE // HEAVY SHELL',icon:'⬟',color:0xff754f,damage:40,range:38,rate:1.08,spread:.018,shots:1,blast:5.8,kind:'rocket'},
+  {name:'Cluster Bomb',type:'EXPLOSIVE // FRAGMENT BURST',icon:'✹',color:0xffc15a,damage:13,range:32,rate:1.02,spread:.065,shots:5,blast:3.3,kind:'rocket'},
+  {name:'Comet Missiles',type:'EXPLOSIVE // TRIPLE LAUNCH',icon:'☄',color:0xff6d72,damage:18,range:36,rate:1.12,spread:.045,shots:3,blast:3.5,kind:'rocket'},
+  {name:'Meteor Maul',type:'MELEE // METEOR SMASH',icon:'☄',color:0xff8654,damage:76,range:3.9,rate:1.02,spread:0,shots:1,kind:'melee'},
+  {name:'Chain Whip',type:'MELEE // REACHING STRIKE',icon:'⤳',color:0xe889ff,damage:35,range:6.2,rate:.62,spread:.015,shots:1,kind:'melee'},
+  {name:'Vortex Staff',type:'MELEE // ARCING SWEEP',icon:'⌁',color:0x8e72ff,damage:33,range:4.7,rate:.48,spread:.12,shots:1,kind:'melee'},
+  {name:'Starfall Spear',type:'MELEE // PIERCING THRUST',icon:'➶',color:0xffe98a,damage:51,range:5.3,rate:.68,spread:0,shots:1,kind:'melee'},
+  {name:'War Pick',type:'MELEE // ARMOR BREAKER',icon:'⚒',color:0x79eaff,damage:62,range:3.6,rate:.82,spread:0,shots:1,kind:'melee'},
+  {name:'Prism Splitter',type:'ENERGY // THREE-WAY BEAM',icon:'✧',color:0xff72cf,damage:17,range:36,rate:.44,spread:.045,shots:3,kind:'laser'},
+  {name:'Jackal Carbine',type:'KINETIC // CONTROLLED BURST',icon:'▤',color:0xffad6b,damage:12,range:34,rate:.36,spread:.02,shots:3,kind:'bullet'}
 ];
 let currentWeapon=weapons[0],player,playerModel,active=false,dead=false,elapsed=0,rerollTimer=12,shotCooldown=0,dashCooldown=0,invuln=0,health=100,kills=0,xp=0,roundNum=1,gameTime=0,lastTime=0,announceTimer=0,weaponKick=0;
 const bots=[],effects=[],projectiles=[],keys={},raycaster=new THREE.Raycaster();raycaster.far=80;
