@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#080b15" />
+  <title>LEXICON — shape the impossible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Lexicon home"><span class="brand-mark">L</span><span>LEXICON<span class="brand-period">.</span></span></a>
+      <div class="room-label"><span class="live-dot"></span> LIVE REALITY <span class="room-id">· ROOM 08A</span></div>
+      <button class="icon-button" id="sound-toggle" aria-label="Toggle sound" title="Toggle sound">♫</button>
+    </header>
+
+    <section class="game-layout">
+      <aside class="left-rail">
+        <div class="round-card panel">
+          <div class="eyebrow">ROUND <span id="round-number">01</span><span class="round-line"></span><span id="round-mode-short">SURVIVAL</span></div>
+          <div class="timer-wrap"><svg class="timer-ring" viewBox="0 0 120 120"><circle class="timer-track" cx="60" cy="60" r="53"/><circle id="timer-progress" class="timer-progress" cx="60" cy="60" r="53"/></svg><div class="timer-value"><strong id="timer-value">12</strong><span>SEC</span></div></div>
+          <p id="timer-caption" class="timer-caption">UNTIL NEXT CREATION</p>
+          <div class="round-divider"></div>
+          <div class="turn-row"><span class="turn-avatar" id="turn-avatar">Y</span><div><span class="micro-label">NEXT UP</span><strong id="turn-name">You</strong></div><span class="turn-arrow">↗</span></div>
+        </div>
+
+        <div class="players-card panel">
+          <div class="section-heading"><span>PLAYERS</span><span class="player-count">04</span></div>
+          <div id="players-list" class="players-list"></div>
+        </div>
+
+        <div class="controls-card panel">
+          <div class="section-heading">HOW TO PLAY <span class="tiny-info">i</span></div>
+          <div class="control-row"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>Move around</span></div>
+          <div class="control-row"><kbd>SPACE</kbd><span>Jump / bounce</span></div>
+          <div class="control-row"><kbd>ENTER</kbd><span>Manifest a word</span></div>
+          <p class="control-note">Words change the world. Try <b>trampoline</b>, <b>moon</b>, or <b>zero gravity</b>.</p>
+        </div>
+      </aside>
+
+      <section class="arena-column">
+        <div class="arena-frame">
+          <div class="arena-topline"><div><span class="eyebrow">THE SHIFTING ARENA</span><span class="arena-subtitle">A world made of words</span></div><div class="arena-badges"><span class="badge"><i class="status-pip"></i> <span id="world-state">STABLE</span></span><span class="badge coordinates">X <span id="pos-x">00</span> &nbsp; Z <span id="pos-z">00</span></span></div></div>
+          <div id="arena" class="arena"><div class="loading-mark"><span></span><span></span><span></span></div><div class="arena-vignette"></div><div id="floating-labels" class="floating-labels"></div>
+            <div class="arena-toast" id="arena-toast"><span class="toast-icon">✦</span><span id="toast-message">A new reality is waiting.</span></div>
+          </div>
+          <div class="arena-footer"><span><i class="mouse-icon">⌖</i> <span id="arena-help">WASD TO MOVE · SPACE TO JUMP</span></span><span id="object-count">01 OBJECTS</span></div>
+        </div>
+        <div class="word-console panel" id="word-console">
+          <div class="console-prompt"><span class="prompt-orb">✦</span><div><span class="eyebrow" id="console-eyebrow">YOUR WORD, YOUR WORLD</span><span class="console-hint" id="console-hint">Every word is a new possibility.</span></div></div>
+          <form id="word-form" class="word-form"><label class="sr-only" for="word-input">Type one word to manifest</label><input id="word-input" type="text" placeholder="Type a word..." maxlength="24" autocomplete="off" spellcheck="false" disabled /><button id="manifest-button" type="submit" disabled><span>MANIFEST</span><span class="button-key">↵</span></button></form>
+          <div class="console-meta"><span id="word-count">0 WORDS USED</span><span class="no-repeat"><span>↻</span> NO REPEATS</span></div>
+        </div>
+      </section>
+
+      <aside class="right-rail">
+        <div class="mode-card panel"><div class="section-heading">GAME MODE <span class="tiny-info" title="Choose how your reality behaves">i</span></div><div class="mode-options" role="group" aria-label="Game mode"><button class="mode-option selected" data-mode="survival"><span class="mode-icon survival-icon">◈</span><span><b>King of Chaos</b><small>Last one standing</small></span><span class="mode-check">✓</span></button><button class="mode-option" data-mode="sandbox"><span class="mode-icon sandbox-icon">⌘</span><span><b>Sandbox</b><small>Build without limits</small></span><span class="mode-check">✓</span></button><button class="mode-option" data-mode="sabotage"><span class="mode-icon sabotage-icon">◎</span><span><b>Sabotage</b><small>Race to your secret goal</small></span><span class="mode-check">✓</span></button></div></div>
+
+        <div class="goal-card panel" id="goal-card"><div class="section-heading"><span id="objective-heading">YOUR OBJECTIVE</span><span class="goal-star">✦</span></div><div class="goal-content"><span class="goal-icon" id="goal-icon">♢</span><p id="goal-text">Stay alive. The arena gets more dangerous every round.</p></div><div class="goal-progress"><div class="progress-track"><span id="goal-progress"></span></div><span id="goal-progress-label">0 / 1</span></div></div>
+
+        <div class="feed-card panel"><div class="section-heading">REALITY FEED <span class="feed-live">LIVE</span></div><div id="event-feed" class="event-feed" aria-live="polite"></div></div>
+
+        <div class="tier-card panel"><div class="section-heading">WORD FREQUENCY <span class="tiny-info" title="Rarer words create stranger effects">i</span></div><div class="tier-row"><span class="tier-dot common"></span><span>COMMON</span><div class="tier-meter"><i></i><i></i><i></i><i></i><i></i></div><small>simple objects</small></div><div class="tier-row"><span class="tier-dot rare"></span><span>RARE</span><div class="tier-meter rare-meter"><i></i><i></i><i></i><i></i><i></i></div><small>world effects</small></div><div class="tier-row"><span class="tier-dot abstract"></span><span>ABSTRACT</span><div class="tier-meter abstract-meter"><i></i><i></i><i></i><i></i><i></i></div><small>reality bends</small></div></div>
+      </aside>
+    </section>
+    <footer class="bottom-bar"><span>LEXICON <span class="footer-dot">/</span> REALITY IS A GROUP PROJECT</span><button id="restart-button">↻ &nbsp; RESTART ROUND</button><span class="version">BUILD 0.8.4 <span class="footer-dot">·</span> <span id="connection-status">CONNECTED</span></span></footer>
+  </main>
+  <div id="modal" class="modal hidden"><div class="modal-card panel"><div class="modal-symbol">✦</div><span class="eyebrow">REALITY CHECK</span><h2 id="modal-title">Round complete</h2><p id="modal-copy"></p><button id="modal-action" class="primary-button">PLAY AGAIN <span>↗</span></button></div></div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
