@@ -96,8 +96,33 @@ function switchMode(mode){state.mode=mode;document.querySelectorAll('.mode-optio
 function restartRound(clearWorld=true){state.round=1;state.elapsed=0;state.phase='prompt';state.phaseTime=10;state.turn='you';state.turnIndex=0;state.openingPrompt=true;state.used.clear();state.gameOver=false;state.gravity=1;state.water=0;state.goalProgress=0;scene.fog.color.set('#111827');$('#goal-progress').style.width='0%';$('#goal-progress-label').textContent='0 / 1';$('#modal').classList.add('hidden');actors.forEach((a,i)=>{a.alive=true;a.health=100;a.group.visible=true;a.group.position.set(actorDefs[i].x,0,actorDefs[i].z);a.vy=0;});if(clearWorld){for(const o of [...objects]){scene.remove(o);const i=objects.indexOf(o);if(i>=0)objects.splice(i,1);}setPieces.clear();}updateObjectCount();$('#timer-caption').textContent='CREATION WINDOW';$('#console-eyebrow').textContent='YOUR WORD, YOUR WORLD';$('#console-hint').textContent='One word. Make it count.';$('#word-input').disabled=false;$('#manifest-button').disabled=false;$('#word-input').value='';showObjective();updatePlayers();toast('Your first creation is ready.');}
 
 function createMesh(geo,material,x,y,z,scale=1){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.setScalar(scale);m.castShadow=true;m.receiveShadow=true;setPieces.add(m);objects.push(m);return m;}
-function spawnWord(word,actor,fromBot=false,reference=null){const normalized=word.toLowerCase().trim();if(!normalized)return false;if(state.used.has(normalized)){toast('That word has already been used.');return false;}state.used.add(normalized);state.combo++;const x=THREE.MathUtils.clamp(actor.group.position.x+(Math.random()-.5)*5,-7.3,7.3),z=THREE.MathUtils.clamp(actor.group.position.z-2-Math.random()*3,-7.5,7.5);let effect='';let material=mats.cyan;let geo=new THREE.IcosahedronGeometry(.8,1);let y=.85;let harmful=false;
- if(/zero.?gravity|float|gravity|weightless/.test(normalized)){state.gravity=state.gravity===0?1:0;effect=state.gravity===0?'gravity vanished':'gravity returned';scene.fog.color.set(state.gravity===0?'#18243f':'#111827');}
+function createPokeBall(x,z){
+ const group=new THREE.Group();group.position.set(x,0,z);group.userData.word='pokemon ball';
+ const red=new THREE.MeshStandardMaterial({color:'#f04452',roughness:.27,metalness:.12});
+ const white=new THREE.MeshStandardMaterial({color:'#f2f4f8',roughness:.3,metalness:.08});
+ const black=new THREE.MeshStandardMaterial({color:'#171b27',roughness:.3,metalness:.18});
+ const button=new THREE.MeshStandardMaterial({color:'#f8fbff',roughness:.2,metalness:.12,emissive:'#71809a',emissiveIntensity:.12});
+ const upper=new THREE.Mesh(new THREE.SphereGeometry(.86,36,24,0,Math.PI*2,0,Math.PI/2),red);
+ const lower=new THREE.Mesh(new THREE.SphereGeometry(.86,36,24,0,Math.PI*2,Math.PI/2,Math.PI/2),white);
+ upper.position.y=.87;lower.position.y=.87;upper.castShadow=lower.castShadow=true;upper.receiveShadow=lower.receiveShadow=true;group.add(upper,lower);
+ const belt=new THREE.Mesh(new THREE.TorusGeometry(.835,.09,12,48),black);belt.rotation.x=Math.PI/2;belt.position.y=.87;belt.castShadow=true;group.add(belt);
+ const buttonFrame=new THREE.Mesh(new THREE.CylinderGeometry(.255,.255,.16,32),black);buttonFrame.rotation.x=Math.PI/2;buttonFrame.position.set(0,.87,.84);buttonFrame.castShadow=true;group.add(buttonFrame);
+ const buttonFace=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.17,32),button);buttonFace.rotation.x=Math.PI/2;buttonFace.position.set(0,.87,.88);group.add(buttonFace);
+ const glint=new THREE.Mesh(new THREE.SphereGeometry(.045,12,10),new THREE.MeshBasicMaterial({color:'#fff'}));glint.position.set(-.045,.925,.973);group.add(glint);
+ setPieces.add(group);objects.push(group);return group;
+}
+function visualLabel(word){
+ const value=word.toLowerCase().trim();
+ if(/pok[eé]?mon(?:\s*ball)?|pok[eé]?ball|monster\s*ball/.test(value))return 'Poké Ball';
+ if(/\b(cat|kitten|dog|puppy|fox|wolf|dragon|bird|shark|fish|whale|duck)\b/.test(value))return 'creature';
+ if(/\b(ball|orb|sphere|planet|moon)\b/.test(value))return 'round object';
+ if(/\b(sword|knife|spear|wand)\b/.test(value))return 'held object';
+ if(/\b(tree|flower|mushroom|forest)\b/.test(value))return 'plant';
+ return '3D word sculpture';
+}
+function spawnWord(word,actor,fromBot=false,reference=null){const normalized=word.toLowerCase().trim();if(!normalized)return false;if(state.used.has(normalized)){toast('That word has already been used.');return false;}state.used.add(normalized);state.combo++;const x=THREE.MathUtils.clamp(actor.group.position.x+(Math.random()-.5)*5,-7.3,7.3),z=THREE.MathUtils.clamp(actor.group.position.z-2-Math.random()*3,-7.5,7.5);let effect='';let material=mats.cyan;let geo=new THREE.IcosahedronGeometry(.8,1);let y=.85;let harmful=false;const appearance=visualLabel(normalized);let customObject=null;
+ if(appearance==='Poké Ball'){customObject=createPokeBall(x,z);effect='a Poké Ball takes shape';}
+ else if(/zero.?gravity|float|gravity|weightless/.test(normalized)){state.gravity=state.gravity===0?1:0;effect=state.gravity===0?'gravity vanished':'gravity returned';scene.fog.color.set(state.gravity===0?'#18243f':'#111827');}
  else if(/flood|water|ocean|tide|rain/.test(normalized)){state.water=Math.min(2.4,state.water+1.15);effect='water is rising';material=new THREE.MeshStandardMaterial({color:'#42c9e8',transparent:true,opacity:.72,roughness:.18,metalness:.2,emissive:'#0b526a',emissiveIntensity:.5});const sea=createMesh(new THREE.BoxGeometry(20,.12,20),material,0,state.water-1.6,0);sea.userData.water=true;}
  else if(/lava|fire|volcano|inferno|flame/.test(normalized)){material=new THREE.MeshStandardMaterial({color:'#ff673f',roughness:.35,emissive:'#d62b10',emissiveIntensity:1.5});geo=new THREE.ConeGeometry(1.05,1.6,7);y=.78;effect='a hazard scorches the floor';harmful=true;}
  else if(/giant|enlarge|big|huge|grow/.test(normalized)){const nearest=[...objects].sort((a,b)=>a.position.distanceTo(actor.group.position)-b.position.distanceTo(actor.group.position))[0];if(nearest){nearest.scale.multiplyScalar(1.65);effect='the nearest thing grew';}else effect='reality stretches';}
@@ -112,7 +137,7 @@ function spawnWord(word,actor,fromBot=false,reference=null){const normalized=wor
  else if(/bridge|road|path|stair|stairs/.test(normalized)){geo=new THREE.BoxGeometry(3,.22,.85);material=mats.lime;y=.18;effect='a path connects the impossible';}
  else if(/tree|flower|forest|mushroom/.test(normalized)){geo=new THREE.ConeGeometry(.72,1.8,7);material=new THREE.MeshStandardMaterial({color:'#a5d875',roughness:.7,emissive:'#284822',emissiveIntensity:.4});y=1;effect='something living takes root';}
  else {const tier=normalized.length>8||/ness|ity|ism|ance|ment/.test(normalized)?'abstract':normalized.length>5?'rare':'common';if(tier==='abstract'){geo=new THREE.TorusKnotGeometry(.68,.16,72,10);material=mats.violet;y=1.35;effect='an abstract idea warps the arena';}else if(tier==='rare'){geo=new THREE.DodecahedronGeometry(.9,1);material=mats.coral;effect='a curious artifact appears';}else{geo=new THREE.BoxGeometry(1.45,1.45,1.45);material=mats.cyan;effect='a new object joins the world';}}
- if(!/flood|water|ocean|tide|rain|giant|enlarge|big|huge|grow|shrink|tiny|small|zero.?gravity|float|gravity|weightless/.test(normalized)){const mesh=createMesh(geo,material,x,y,z);mesh.userData={word:normalized,harmful};}
+ if(!customObject&&!/flood|water|ocean|tide|rain|giant|enlarge|big|huge|grow|shrink|tiny|small|zero.?gravity|float|gravity|weightless/.test(normalized)){const mesh=createMesh(geo,material,x,y,z);mesh.userData={word:normalized,harmful};}
  const who=fromBot?actor.name:'You';addEvent(who,`manifested <strong>${escapeHtml(normalized)}</strong> — ${effect}.`,harmful?'⚠':'✦',reference);toast(`${normalized} — ${effect}.`);updateObjectCount();
  if(state.mode==='sabotage'&&!fromBot){const goal=state.secretGoal;if(normalized.includes(goal)||/tower|stairs|bridge/.test(normalized)){state.goalProgress=1;$('#goal-progress').style.width='100%';$('#goal-progress-label').textContent='1 / 1';setTimeout(()=>finishGame(true,'You found a way to your secret goal.'),900);}}
  if(state.mode==='survival'&&harmful){const targets=actors.filter(a=>a.alive);const victim=targets.sort((a,b)=>a.group.position.distanceTo(new THREE.Vector3(x,0,z))-b.group.position.distanceTo(new THREE.Vector3(x,0,z)))[0];if(victim&&victim.group.position.distanceTo(new THREE.Vector3(x,0,z))<3){damage(victim,26);}}
@@ -148,7 +173,7 @@ async function fetchBotReference(){
 function botCreate(id){const actor=actorById[id];if(!actor||!actor.alive)return;let referenceIndex=botReferences.findIndex(item=>!state.used.has(item.word.toLowerCase()));const reference=referenceIndex>=0?botReferences.splice(referenceIndex,1)[0]:null;let options=botWords.filter(w=>!state.used.has(w.toLowerCase()));if(!options.length)options=['Nostalgia','Echo Chamber','Staircase'];const word=reference?.word||options[Math.floor(Math.random()*options.length)];spawnWord(word,actor,true,reference);if(state.mode==='survival'&&Math.random()<.25)damage(actor,12);if(!referenceRequestPending&&botReferences.length<2)fetchBotReference();}
 function submitWord(word){const actor=actorById.you;if(!actor.alive)return false;if(!word||word.length>24||!/[a-z]/i.test(word)){toast('Use one word to change reality.');return false;}if(state.used.has(word.toLowerCase())){toast('That word has already been used.');$('#word-input').select();return false;}const ok=spawnWord(word,actor);if(ok){state.openingPrompt=false;$('#word-input').value='';state.phase='manifested';state.phaseTime=1.1;$('#word-input').disabled=true;$('#manifest-button').disabled=true;$('#console-hint').textContent='The world has changed. Watch closely.';}return ok;}
 $('#word-form').addEventListener('submit',e=>{e.preventDefault();if(!$('#word-input').disabled)submitWord($('#word-input').value.trim());});
-$('#word-input').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\s+/g,' ').replace(/[^a-zA-Z -]/g,'');});
+$('#word-input').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\s+/g,' ').replace(/[^a-zA-ZéÉ -]/g,'');});
 document.querySelectorAll('.mode-option').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.mode!==state.mode)switchMode(btn.dataset.mode);}));
 $('#restart-button').addEventListener('click',()=>{restartRound();addEvent('Reality','was reset. Your next idea is yours.','↻');});
 $('#modal-action').addEventListener('click',()=>restartRound());
