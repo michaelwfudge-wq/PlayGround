@@ -81,9 +81,10 @@ function updatePlayers(){
  $('#turn-name').textContent=actorById[state.turn]?.name||'—';$('#turn-avatar').textContent=actorById[state.turn]?.name[0]||'✦';
  $('#round-number').textContent=String(state.round).padStart(2,'0');$('#round-mode-short').textContent=modeLabels[state.mode];
 }
-function addEvent(who,text,icon='✦'){
+function addEvent(who,text,icon='✦',reference=null){
  const feed=$('#event-feed');const now=new Date();const time=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
- const item=document.createElement('div');item.className='feed-event';item.innerHTML=`<span class="feed-glyph">${icon}</span><div><strong>${who}</strong> ${text}<time>${time} · JUST NOW</time></div>`;feed.prepend(item);while(feed.children.length>5)feed.lastChild.remove();
+ const credit=reference?`<span class="reference-credit">Inspired by <a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${escapeHtml(reference.title)}</a></span>`:'';
+ const item=document.createElement('div');item.className='feed-event';item.innerHTML=`<span class="feed-glyph">${icon}</span><div><strong>${who}</strong> ${text}${credit}<time>${time} · JUST NOW</time></div>`;feed.prepend(item);while(feed.children.length>5)feed.lastChild.remove();
 }
 function toast(text){$('#toast-message').textContent=text;const el=$('#arena-toast');el.classList.add('show');clearTimeout(state.toastTimeout);state.toastTimeout=setTimeout(()=>el.classList.remove('show'),2300);}
 function updateObjectCount(){const count=objects.filter(o=>o.parent).length+1;$('#object-count').textContent=`${String(count).padStart(2,'0')} OBJECTS`;$('#word-count').textContent=`${state.used.size} WORD${state.used.size===1?'':'S'} USED`;}
@@ -95,7 +96,7 @@ function switchMode(mode){state.mode=mode;document.querySelectorAll('.mode-optio
 function restartRound(clearWorld=true){state.round=1;state.elapsed=0;state.phase='prompt';state.phaseTime=10;state.turn='you';state.turnIndex=0;state.openingPrompt=true;state.used.clear();state.gameOver=false;state.gravity=1;state.water=0;state.goalProgress=0;scene.fog.color.set('#111827');$('#goal-progress').style.width='0%';$('#goal-progress-label').textContent='0 / 1';$('#modal').classList.add('hidden');actors.forEach((a,i)=>{a.alive=true;a.health=100;a.group.visible=true;a.group.position.set(actorDefs[i].x,0,actorDefs[i].z);a.vy=0;});if(clearWorld){for(const o of [...objects]){scene.remove(o);const i=objects.indexOf(o);if(i>=0)objects.splice(i,1);}setPieces.clear();}updateObjectCount();$('#timer-caption').textContent='CREATION WINDOW';$('#console-eyebrow').textContent='YOUR WORD, YOUR WORLD';$('#console-hint').textContent='One word. Make it count.';$('#word-input').disabled=false;$('#manifest-button').disabled=false;$('#word-input').value='';showObjective();updatePlayers();toast('Your first creation is ready.');}
 
 function createMesh(geo,material,x,y,z,scale=1){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.setScalar(scale);m.castShadow=true;m.receiveShadow=true;setPieces.add(m);objects.push(m);return m;}
-function spawnWord(word,actor,fromBot=false){const normalized=word.toLowerCase().trim();if(!normalized)return false;if(state.used.has(normalized)){toast('That word has already been used.');return false;}state.used.add(normalized);state.combo++;const x=THREE.MathUtils.clamp(actor.group.position.x+(Math.random()-.5)*5,-7.3,7.3),z=THREE.MathUtils.clamp(actor.group.position.z-2-Math.random()*3,-7.5,7.5);let effect='';let material=mats.cyan;let geo=new THREE.IcosahedronGeometry(.8,1);let y=.85;let harmful=false;
+function spawnWord(word,actor,fromBot=false,reference=null){const normalized=word.toLowerCase().trim();if(!normalized)return false;if(state.used.has(normalized)){toast('That word has already been used.');return false;}state.used.add(normalized);state.combo++;const x=THREE.MathUtils.clamp(actor.group.position.x+(Math.random()-.5)*5,-7.3,7.3),z=THREE.MathUtils.clamp(actor.group.position.z-2-Math.random()*3,-7.5,7.5);let effect='';let material=mats.cyan;let geo=new THREE.IcosahedronGeometry(.8,1);let y=.85;let harmful=false;
  if(/zero.?gravity|float|gravity|weightless/.test(normalized)){state.gravity=state.gravity===0?1:0;effect=state.gravity===0?'gravity vanished':'gravity returned';scene.fog.color.set(state.gravity===0?'#18243f':'#111827');}
  else if(/flood|water|ocean|tide|rain/.test(normalized)){state.water=Math.min(2.4,state.water+1.15);effect='water is rising';material=new THREE.MeshStandardMaterial({color:'#42c9e8',transparent:true,opacity:.72,roughness:.18,metalness:.2,emissive:'#0b526a',emissiveIntensity:.5});const sea=createMesh(new THREE.BoxGeometry(20,.12,20),material,0,state.water-1.6,0);sea.userData.water=true;}
  else if(/lava|fire|volcano|inferno|flame/.test(normalized)){material=new THREE.MeshStandardMaterial({color:'#ff673f',roughness:.35,emissive:'#d62b10',emissiveIntensity:1.5});geo=new THREE.ConeGeometry(1.05,1.6,7);y=.78;effect='a hazard scorches the floor';harmful=true;}
@@ -112,7 +113,7 @@ function spawnWord(word,actor,fromBot=false){const normalized=word.toLowerCase()
  else if(/tree|flower|forest|mushroom/.test(normalized)){geo=new THREE.ConeGeometry(.72,1.8,7);material=new THREE.MeshStandardMaterial({color:'#a5d875',roughness:.7,emissive:'#284822',emissiveIntensity:.4});y=1;effect='something living takes root';}
  else {const tier=normalized.length>8||/ness|ity|ism|ance|ment/.test(normalized)?'abstract':normalized.length>5?'rare':'common';if(tier==='abstract'){geo=new THREE.TorusKnotGeometry(.68,.16,72,10);material=mats.violet;y=1.35;effect='an abstract idea warps the arena';}else if(tier==='rare'){geo=new THREE.DodecahedronGeometry(.9,1);material=mats.coral;effect='a curious artifact appears';}else{geo=new THREE.BoxGeometry(1.45,1.45,1.45);material=mats.cyan;effect='a new object joins the world';}}
  if(!/flood|water|ocean|tide|rain|giant|enlarge|big|huge|grow|shrink|tiny|small|zero.?gravity|float|gravity|weightless/.test(normalized)){const mesh=createMesh(geo,material,x,y,z);mesh.userData={word:normalized,harmful};}
- const who=fromBot?actor.name:'You';addEvent(who,`manifested <strong>${escapeHtml(normalized)}</strong> — ${effect}.`,harmful?'⚠':'✦');toast(`${normalized} — ${effect}.`);updateObjectCount();
+ const who=fromBot?actor.name:'You';addEvent(who,`manifested <strong>${escapeHtml(normalized)}</strong> — ${effect}.`,harmful?'⚠':'✦',reference);toast(`${normalized} — ${effect}.`);updateObjectCount();
  if(state.mode==='sabotage'&&!fromBot){const goal=state.secretGoal;if(normalized.includes(goal)||/tower|stairs|bridge/.test(normalized)){state.goalProgress=1;$('#goal-progress').style.width='100%';$('#goal-progress-label').textContent='1 / 1';setTimeout(()=>finishGame(true,'You found a way to your secret goal.'),900);}}
  if(state.mode==='survival'&&harmful){const targets=actors.filter(a=>a.alive);const victim=targets.sort((a,b)=>a.group.position.distanceTo(new THREE.Vector3(x,0,z))-b.group.position.distanceTo(new THREE.Vector3(x,0,z)))[0];if(victim&&victim.group.position.distanceTo(new THREE.Vector3(x,0,z))<3){damage(victim,26);}}
  return true;
@@ -121,7 +122,30 @@ function escapeHtml(text){return text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 function damage(actor,amount){if(!actor.alive||state.mode!=='survival')return;actor.health=Math.max(0,actor.health-amount);updatePlayers();if(actor.health===0){actor.alive=false;addEvent('Arena',`${actor.name} was eliminated.`,'×');actor.group.visible=false;const alive=actors.filter(a=>a.alive);if(alive.length<=1)finishGame(alive[0]?.id==='you',alive[0]?.id==='you'?'You are the last one standing.':'The arena claimed the final survivor.');}}
 
 const botWords=['Trampoline','Moon','Crystal','Bridge','Glitch','Shark','Castle','Zero Gravity','Flower','Lava','Rubber Duck','Giant','Pillow','Meteor','Dream'];
-function botCreate(id){const actor=actorById[id];if(!actor||!actor.alive)return;let options=botWords.filter(w=>!state.used.has(w.toLowerCase()));if(!options.length)options=['Nostalgia','Echo Chamber','Staircase'];const word=options[Math.floor(Math.random()*options.length)];spawnWord(word,actor,true);if(state.mode==='survival'&&Math.random()<.25)damage(actor,12);}
+const botReferences=[];
+let referenceRequestPending=false;
+function setReferenceStatus(label,title){const status=$('#connection-status');status.textContent=label;status.title=title;}
+async function fetchBotReference(){
+ if(referenceRequestPending)return;
+ referenceRequestPending=true;
+ const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),7000);
+ try{
+  const response=await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary',{headers:{Accept:'application/json'},signal:controller.signal,cache:'no-store'});
+  if(!response.ok)throw new Error(`Wikipedia returned ${response.status}`);
+  const summary=await response.json();
+  const title=String(summary?.title||'').replace(/<[^>]*>/g,'').trim();
+  const word=title.replace(/[^a-zA-Z -]/g,'').replace(/\s+/g,' ').replace(/\s*[-–—]\s*/g,' ').trim().slice(0,24).trim();
+  if(word.length<2)throw new Error('No usable article title');
+  const canonical=String(summary?.titles?.canonical||title).replace(/[^a-zA-Z0-9 _-]/g,'').trim();
+  botReferences.push({word,title,url:`https://en.wikipedia.org/wiki/${encodeURIComponent(canonical.replace(/ /g,'_'))}`});
+  setReferenceStatus('WIKI READY','Bots are using random Wikipedia article titles for word inspiration.');
+ }catch(error){
+  setReferenceStatus('WIKI OFFLINE','Internet references are unavailable; bots will use their built-in word list.');
+ }finally{
+  clearTimeout(timeout);referenceRequestPending=false;
+ }
+}
+function botCreate(id){const actor=actorById[id];if(!actor||!actor.alive)return;let referenceIndex=botReferences.findIndex(item=>!state.used.has(item.word.toLowerCase()));const reference=referenceIndex>=0?botReferences.splice(referenceIndex,1)[0]:null;let options=botWords.filter(w=>!state.used.has(w.toLowerCase()));if(!options.length)options=['Nostalgia','Echo Chamber','Staircase'];const word=reference?.word||options[Math.floor(Math.random()*options.length)];spawnWord(word,actor,true,reference);if(state.mode==='survival'&&Math.random()<.25)damage(actor,12);if(!referenceRequestPending&&botReferences.length<2)fetchBotReference();}
 function submitWord(word){const actor=actorById.you;if(!actor.alive)return false;if(!word||word.length>24||!/[a-z]/i.test(word)){toast('Use one word to change reality.');return false;}if(state.used.has(word.toLowerCase())){toast('That word has already been used.');$('#word-input').select();return false;}const ok=spawnWord(word,actor);if(ok){state.openingPrompt=false;$('#word-input').value='';state.phase='manifested';state.phaseTime=1.1;$('#word-input').disabled=true;$('#manifest-button').disabled=true;$('#console-hint').textContent='The world has changed. Watch closely.';}return ok;}
 $('#word-form').addEventListener('submit',e=>{e.preventDefault();if(!$('#word-input').disabled)submitWord($('#word-input').value.trim());});
 $('#word-input').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\s+/g,' ').replace(/[^a-zA-Z -]/g,'');});
@@ -154,4 +178,4 @@ function moveActors(dt,t){for(const a of actors){if(!a.alive)continue;a.bob+=dt*
 function animateObjects(dt,t){for(const o of objects){if(!o.parent)continue;o.rotation.y+=dt*(o.userData.word==='moon'?.08:.35);if(o.userData.word&&/moon|shark|fish|bird|dragon|whale|duck|rubber/.test(o.userData.word)){o.position.y+=Math.sin(t*1.6+o.position.x)*dt*.25;}}}
 function renderLoop(now){requestAnimationFrame(renderLoop);const dt=Math.min(.04,(now-lastFrame)/1000);lastFrame=now;stepGame(dt);moveActors(dt,now/1000);animateObjects(dt,now/1000);const you=actorById.you;const target=new THREE.Vector3(you.group.position.x*.25,1.1,you.group.position.z*.15);camera.position.x+=(you.group.position.x*.28-camera.position.x)*dt*.8;camera.position.z+=(17.5-camera.position.z)*dt*.8;camera.lookAt(target);renderer.render(scene,camera);}
 
-showObjective();updatePlayers();addEvent('Reality','is stable. Your first creation window is open.','✦');updateObjectCount();setTurn('you');requestAnimationFrame(renderLoop);
+showObjective();updatePlayers();addEvent('Reality','is stable. Your first creation window is open.','✦');updateObjectCount();setTurn('you');setReferenceStatus('WIKI CHECKING','Checking whether internet word references are available.');fetchBotReference();requestAnimationFrame(renderLoop);
